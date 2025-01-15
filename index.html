@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Training Course Finder</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .filters {
+            margin-bottom: 20px;
+        }
+        .filters select {
+            margin-right: 10px;
+            padding: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+    </style>
+</head>
+<body>
+    <h1>Training Course Finder</h1>
+
+    <!-- Filters -->
+    <div class="filters">
+        <label for="categoryFilter">Category:</label>
+        <select id="categoryFilter">
+            <option value="">All Categories</option>
+        </select>
+
+        <label for="levelFilter">Level:</label>
+        <select id="levelFilter">
+            <option value="">All Levels</option>
+        </select>
+    </div>
+
+    <!-- Course Table -->
+    <table>
+        <thead>
+            <tr>
+                <th>Category</th>
+                <th>Level</th>
+                <th>Course Name</th>
+                <th>Course Description</th>
+                <th>Course Code</th>
+                <th>Prerequisites</th>
+                <th>Certification</th>
+                <th>Duration</th>
+            </tr>
+        </thead>
+        <tbody id="coursesTableBody"></tbody>
+    </table>
+
+    <script>
+        let courses = [];
+
+        // Load courses from the CSV file
+        function loadCourses() {
+            Papa.parse("Courses.csv", {
+                download: true,
+                header: true,
+                complete: function (results) {
+                    courses = results.data;
+                    displayCourses(courses);
+                    populateFilters();
+                },
+            });
+        }
+
+        // Display courses in the table
+        function displayCourses(filteredCourses) {
+            const tableBody = document.getElementById("coursesTableBody");
+            tableBody.innerHTML = ""; // Clear existing rows
+
+            filteredCourses.forEach(course => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${course.Category}</td>
+                    <td>${course.Level}</td>
+                    <td>${course["Course Name"]}</td>
+                    <td>${course["Course Desctiption"]}</td>
+                    <td>${course["Course Code"]}</td>
+                    <td>${course.Prerequisites}</td>
+                    <td>${course.Certification}</td>
+                    <td>${course.Duration}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Populate filter dropdowns
+        function populateFilters() {
+            const categoryFilter = document.getElementById("categoryFilter");
+            const levelFilter = document.getElementById("levelFilter");
+
+            // Populate Category Filter
+            const categories = [...new Set(courses.map(course => course.Category))];
+            categoryFilter.innerHTML = '<option value="">All Categories</option>';
+            categories.forEach(category => {
+                categoryFilter.innerHTML += `<option value="${category}">${category}</option>`;
+            });
+
+            // Populate Level Filter
+            const levels = [...new Set(courses.map(course => course.Level))];
+            levelFilter.innerHTML = '<option value="">All Levels</option>';
+            levels.forEach(level => {
+                levelFilter.innerHTML += `<option value="${level}">${level}</option>`;
+            });
+
+            // Attach event listeners to filters
+            categoryFilter.addEventListener("change", applyFilters);
+            levelFilter.addEventListener("change", applyFilters);
+        }
+
+        // Apply filters to the courses
+        function applyFilters() {
+            const categoryFilter = document.getElementById("categoryFilter").value;
+            const levelFilter = document.getElementById("levelFilter").value;
+
+            const filteredCourses = courses.filter(course => {
+                return (
+                    (categoryFilter === "" || course.Category === categoryFilter) &&
+                    (levelFilter === "" || course.Level === levelFilter)
+                );
+            });
+
+            displayCourses(filteredCourses);
+        }
+
+        // Load courses on page load
+        document.addEventListener("DOMContentLoaded", loadCourses);
+    </script>
+</body>
+</html>
